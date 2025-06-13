@@ -62,6 +62,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
+            transition: all 0.3s ease;
         }
         #player-body {
             width: 100%;
@@ -92,6 +93,7 @@
             top: 30px;
             background-color: #4CAF50;
             transform-origin: top center;
+            transition: transform 0.3s ease;
         }
         #player-arm-left {
             left: 5px;
@@ -106,6 +108,7 @@
             bottom: 0;
             background-color: #4CAF50;
             transform-origin: top center;
+            transition: transform 0.3s ease;
         }
         #player-leg-left {
             left: 14px;
@@ -148,6 +151,7 @@
             left: 5px;
             background-color: #333;
             transform-origin: center center;
+            transition: transform 0.3s ease;
         }
         #squat-rack {
             left: 50%;
@@ -204,6 +208,7 @@
             background-color: #f55;
             font-size: 24px;
             margin-bottom: 10px;
+            cursor: pointer;
         }
         #qte-timer {
             width: 80%;
@@ -216,7 +221,7 @@
             height: 100%;
             width: 100%;
             background-color: #4CAF50;
-            transition: width 0.1s;
+            transition: width 0.1s linear;
         }
         button {
             background-color: #4CAF50;
@@ -228,9 +233,14 @@
             cursor: pointer;
             font-size: 16px;
             width: 95%;
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.98);
         }
         button:disabled {
             background-color: #555;
+            cursor: not-allowed;
         }
         @keyframes benchPress {
             0% { transform: rotate(0deg); }
@@ -259,6 +269,7 @@
         </div>
         
         <div id="gym-display">
+            <!-- Игрок -->
             <div id="player">
                 <div id="player-body">
                     <div id="player-head"></div>
@@ -270,6 +281,7 @@
                 </div>
             </div>
             
+            <!-- Тренажеры -->
             <div id="bench-press" class="equipment">
                 <div id="bench-press-base"></div>
                 <div id="bench-press-seat"></div>
@@ -288,11 +300,13 @@
             </div>
         </div>
         
+        <!-- Кнопки тренировок -->
         <button id="bench-btn">🏋️ Жим лежа (+Сила)</button>
         <button id="squat-btn">🦵 Приседания (+Сила)</button>
         <button id="treadmill-btn">🏃 Бег (+Выносливость)</button>
         <button id="rest-btn">💤 Отдохнуть</button>
         
+        <!-- QTE мини-игра -->
         <div id="qte-container">
             <div id="qte-message"></div>
             <button id="qte-button">ЖМИ!</button>
@@ -364,7 +378,8 @@
                     });
                     
                     // Показываем тренажер
-                    document.getElementById(type).style.display = 'block';
+                    const equipment = document.getElementById(type);
+                    if (equipment) equipment.style.display = 'block';
                     
                     // Настраиваем упражнение
                     switch(type) {
@@ -395,14 +410,25 @@
                 },
                 
                 setupBenchPress() {
-                    document.getElementById('player').style.bottom = '35px';
-                    document.getElementById('player-arm-left').style.transform = 'rotate(70deg)';
-                    document.getElementById('player-arm-right').style.transform = 'rotate(-70deg)';
+                    const player = document.getElementById('player');
+                    const leftArm = document.getElementById('player-arm-left');
+                    const rightArm = document.getElementById('player-arm-right');
+                    
+                    if (player && leftArm && rightArm) {
+                        player.style.bottom = '35px';
+                        leftArm.style.transform = 'rotate(70deg)';
+                        rightArm.style.transform = 'rotate(-70deg)';
+                    }
                 },
                 
                 setupSquat() {
-                    document.getElementById('player-leg-left').style.transform = 'rotate(15deg)';
-                    document.getElementById('player-leg-right').style.transform = 'rotate(-15deg)';
+                    const leftLeg = document.getElementById('player-leg-left');
+                    const rightLeg = document.getElementById('player-leg-right');
+                    
+                    if (leftLeg && rightLeg) {
+                        leftLeg.style.transform = 'rotate(15deg)';
+                        rightLeg.style.transform = 'rotate(-15deg)';
+                    }
                 },
                 
                 setupTreadmill() {
@@ -413,8 +439,10 @@
                     const leftLeg = document.getElementById('player-leg-left');
                     const rightLeg = document.getElementById('player-leg-right');
                     
-                    leftLeg.style.animation = 'runLeg 0.5s infinite';
-                    rightLeg.style.animation = 'runLeg 0.5s infinite 0.25s';
+                    if (leftLeg && rightLeg) {
+                        leftLeg.style.animation = 'runLeg 0.5s infinite';
+                        rightLeg.style.animation = 'runLeg 0.5s infinite 0.25s';
+                    }
                 },
                 
                 handleQTEClick() {
@@ -437,25 +465,32 @@
                 
                 animateBenchPress() {
                     const bar = document.getElementById('bench-press-bar');
-                    bar.style.animation = 'benchPress 0.3s';
-                    setTimeout(() => bar.style.animation = 'none', 300);
+                    if (bar) {
+                        bar.style.animation = 'benchPress 0.3s';
+                        setTimeout(() => bar.style.animation = 'none', 300);
+                    }
                 },
                 
                 animateSquat() {
                     const player = document.getElementById('player');
-                    player.style.animation = 'squat 0.5s';
-                    setTimeout(() => player.style.animation = 'none', 500);
+                    if (player) {
+                        player.style.animation = 'squat 0.5s';
+                        setTimeout(() => player.style.animation = 'none', 500);
+                    }
                 },
                 
                 startQTE() {
                     this.state.qteActive = true;
                     this.state.qteTimeLeft = 100;
-                    document.getElementById('qte-container').style.display = 'flex';
-                    document.getElementById('qte-progress').style.width = '100%';
+                    const qteContainer = document.getElementById('qte-container');
+                    if (qteContainer) qteContainer.style.display = 'flex';
+                    
+                    const qteProgress = document.getElementById('qte-progress');
+                    if (qteProgress) qteProgress.style.width = '100%';
                     
                     this.state.qteInterval = setInterval(() => {
                         this.state.qteTimeLeft--;
-                        document.getElementById('qte-progress').style.width = `${this.state.qteTimeLeft}%`;
+                        if (qteProgress) qteProgress.style.width = `${this.state.qteTimeLeft}%`;
                         
                         if (this.state.qteTimeLeft <= 0) {
                             this.endTraining();
@@ -466,7 +501,9 @@
                 endTraining() {
                     clearInterval(this.state.qteInterval);
                     this.state.qteActive = false;
-                    document.getElementById('qte-container').style.display = 'none';
+                    
+                    const qteContainer = document.getElementById('qte-container');
+                    if (qteContainer) qteContainer.style.display = 'none';
                     
                     // Рассчитываем результат
                     const successRate = Math.min(1, this.state.qteCount / this.state.qteTarget);
@@ -508,16 +545,28 @@
                 
                 resetPlayer() {
                     const player = document.getElementById('player');
-                    player.style.bottom = '20px';
-                    player.style.animation = 'none';
+                    if (player) {
+                        player.style.bottom = '20px';
+                        player.style.animation = 'none';
+                    }
                     
-                    document.getElementById('player-arm-left').style.transform = 'none';
-                    document.getElementById('player-arm-right').style.transform = 'none';
-                    document.getElementById('player-leg-left').style.transform = 'none';
-                    document.getElementById('player-leg-right').style.transform = 'none';
-                    document.getElementById('player-leg-left').style.animation = 'none';
-                    document.getElementById('player-leg-right').style.animation = 'none';
-                    document.getElementById('bench-press-bar').style.animation = 'none';
+                    const leftArm = document.getElementById('player-arm-left');
+                    const rightArm = document.getElementById('player-arm-right');
+                    const leftLeg = document.getElementById('player-leg-left');
+                    const rightLeg = document.getElementById('player-leg-right');
+                    const bar = document.getElementById('bench-press-bar');
+                    
+                    if (leftArm) leftArm.style.transform = 'none';
+                    if (rightArm) rightArm.style.transform = 'none';
+                    if (leftLeg) {
+                        leftLeg.style.transform = 'none';
+                        leftLeg.style.animation = 'none';
+                    }
+                    if (rightLeg) {
+                        rightLeg.style.transform = 'none';
+                        rightLeg.style.animation = 'none';
+                    }
+                    if (bar) bar.style.animation = 'none';
                 },
                 
                 rest() {
