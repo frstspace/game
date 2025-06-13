@@ -108,6 +108,7 @@
             height: 50px;
             bottom: 0;
             background-color: #4CAF50;
+            transform-origin: top center;
         }
         #player-leg-left {
             left: 14px;
@@ -274,6 +275,31 @@
             50% { transform: rotate(-30deg); }
             100% { transform: rotate(0deg); }
         }
+        @keyframes squat {
+            0% { 
+                transform: translateY(0);
+                bottom: 20px;
+            }
+            50% { 
+                transform: translateY(20px);
+                bottom: 0px;
+            }
+            100% { 
+                transform: translateY(0);
+                bottom: 20px;
+            }
+        }
+        @keyframes runLegs {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-15deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes runBelt {
+            0% { background-position-x: 0; }
+            100% { background-position-x: -60px; }
+        }
         button {
             background-color: #4CAF50;
             color: white;
@@ -296,7 +322,6 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Область для сообщений вместо заголовка -->
         <div id="message-display"></div>
         
         <div id="stats">
@@ -349,230 +374,215 @@
         
         <!-- QTE мини-игра -->
         <div id="qte-container">
-            <div id="qte-message">Жми кнопку, чтобы поднять штангу!</div>
+            <div id="qte-message"></div>
             <button id="qte-button">ЖМИ!</button>
             <div id="qte-timer"><div id="qte-progress"></div></div>
         </div>
         
         <div id="log"></div>
     </div>
-    
+
     <script>
-        // Игровые переменные
-        let player = {
-            strength: 10,
-            stamina: 10,
-            maxStamina: 10,
-            money: 100,
-            xp: 0,
-            level: 1
-        };
-
-        let gameState = {
-            training: false,
-            currentExercise: null,
-            qteActive: false,
-            qteCount: 0,
-            qteTarget: 0,
-            qteTimeLeft: 0,
-            qteInterval: null
-        };
-
-        // Функция для отображения сообщений
-        function showMessage(text) {
-            const messageDisplay = document.getElementById('message-display');
-            messageDisplay.textContent = text;
-            messageDisplay.style.opacity = 1;
+        const game = {
+            player: {
+                strength: 10,
+                stamina: 10,
+                maxStamina: 10,
+                money: 100,
+                xp: 0,
+                level: 1
+            },
+            state: {
+                training: false,
+                currentExercise: null,
+                qteActive: false,
+                qteCount: 0,
+                qteTarget: 20,
+                qteTimeLeft: 100,
+                qteInterval: null,
+                animationInterval: null,
+                runSpeed: 0
+            },
             
-            // Сообщение исчезает через 3 секунды
-            setTimeout(() => {
-                messageDisplay.style.opacity = 0;
-            }, 3000);
-        }
-
-        // Инициализация игры
-        function initGame() {
-            updateStats();
-            showMessage("Добро пожаловать в тренажерный зал!");
-        }
-
-        // Обновление статистики
-        function updateStats() {
-            document.getElementById("strength").textContent = player.strength;
-            document.getElementById("stamina").textContent = player.stamina;
-            document.getElementById("max-stamina").textContent = player.maxStamina;
-            document.getElementById("money").textContent = player.money;
-        }
-
-        // Добавление сообщения в лог
-        function addLog(message) {
-            const log = document.getElementById("log");
-            const entry = document.createElement("div");
-            entry.className = "log-entry";
-            entry.textContent = message;
-            log.prepend(entry);
+            init() {
+                this.updateStats();
+                this.showMessage("Добро пожаловать в тренажерный зал!");
+                document.getElementById('qte-button').onclick = () => this.handleQTEClick();
+            },
             
-            if (log.children.length > 5) {
-                log.removeChild(log.lastChild);
-            }
-        }
-
-        // Начало тренировки
-        function startTraining(type) {
-            if (player.stamina <= 0) {
-                showMessage("❌ Слишком устал для тренировки!");
-                return;
-            }
+            showMessage(text) {
+                const el = document.getElementById('message-display');
+                el.textContent = text;
+                el.style.opacity = 1;
+                setTimeout(() => el.style.opacity = 0, 3000);
+            },
             
-            gameState.training = true;
-            gameState.currentExercise = type;
+            updateStats() {
+                document.getElementById("strength").textContent = this.player.strength;
+                document.getElementById("stamina").textContent = this.player.stamina;
+                document.getElementById("max-stamina").textContent = this.player.maxStamina;
+                document.getElementById("money").textContent = this.player.money;
+            },
             
-            // Скрываем все кнопки
-            document.querySelectorAll("button").forEach(btn => {
-                if (!btn.id.includes("qte")) btn.disabled = true;
-            });
-            
-            // Показываем нужный тренажер
-            const equipment = document.getElementById(`${type.replace("-", "")}`);
-            equipment.style.display = "block";
-            
-            // Настраиваем QTE
-            let qteTarget = 0;
-            let message = "";
-            
-            switch(type) {
-                case "bench":
-                    qteTarget = 10 + Math.floor(player.strength / 5);
-                    message = "Жми кнопку, чтобы поднять штангу!";
-                    setupBenchPress();
-                    break;
-                case "squat":
-                    qteTarget = 8 + Math.floor(player.strength / 5);
-                    message = "Приседай! Быстро нажимай!";
-                    setupSquat();
-                    break;
-                case "treadmill":
-                    qteTarget = 15 + Math.floor(player.maxStamina / 5);
-                    message = "Беги! Нажимай быстрее!";
-                    setupTreadmill();
-                    break;
-            }
-            
-            showMessage(message);
-            startQTE(type, qteTarget);
-        }
-
-        // Настройка жима лежа
-        function setupBenchPress() {
-            // Игрок лежит на скамье
-            document.getElementById("player").style.bottom = "35px";
-            document.getElementById("player-arm-left").style.transform = "rotate(70deg)";
-            document.getElementById("player-arm-right").style.transform = "rotate(-70deg)";
-        }
-
-        // Настройка приседаний
-        function setupSquat() {
-            // Можно добавить анимацию приседаний
-        }
-
-        // Настройка беговой дорожки
-        function setupTreadmill() {
-            // Можно добавить анимацию бега
-        }
-
-        // Завершение тренировки
-        function completeTraining(type, successRate) {
-            let strengthGain = 0;
-            let staminaGain = 0;
-            
-            switch(type) {
-                case "bench":
-                case "squat":
-                    strengthGain = Math.floor(2 * successRate);
-                    player.strength += strengthGain;
-                    showMessage(`💪 +${strengthGain} к силе!`);
-                    break;
-                case "treadmill":
-                    staminaGain = Math.floor(3 * successRate);
-                    player.stamina = Math.min(player.stamina + staminaGain, player.maxStamina);
-                    showMessage(`🏃 +${staminaGain} к выносливости!`);
-                    break;
-            }
-            
-            // Расход выносливости
-            player.stamina = Math.max(0, player.stamina - 1);
-            
-            // Скрываем тренажер
-            document.querySelectorAll(".equipment").forEach(el => el.style.display = "none");
-            
-            // Возвращаем игрока в исходное положение
-            document.getElementById("player").style.bottom = "20px";
-            document.getElementById("player-arm-left").style.transform = "none";
-            document.getElementById("player-arm-right").style.transform = "none";
-            
-            gameState.training = false;
-            updateStats();
-            
-            // Включаем кнопки
-            document.querySelectorAll("button").forEach(btn => {
-                if (!btn.id.includes("qte")) btn.disabled = false;
-            });
-        }
-
-        // Отдых
-        function rest() {
-            const recovery = 3 + Math.floor(player.maxStamina / 5);
-            player.stamina = Math.min(player.stamina + recovery, player.maxStamina);
-            showMessage(`💤 Отдохнул! +${recovery} выносливости.`);
-            updateStats();
-        }
-
-        // QTE мини-игра
-        function startQTE(type, target) {
-            gameState.qteActive = true;
-            gameState.qteCount = 0;
-            gameState.qteTarget = target;
-            gameState.qteTimeLeft = 100;
-            
-            document.getElementById("qte-container").style.display = "flex";
-            
-            document.getElementById("qte-button").onclick = () => {
-                if (gameState.qteActive) {
-                    gameState.qteCount++;
-                    
-                    // Анимация поднятия штанги (для жима)
-                    if (gameState.currentExercise === "bench") {
-                        const bar = document.getElementById("bench-press-bar");
-                        bar.style.animation = "benchPress 0.3s";
-                        setTimeout(() => bar.style.animation = "none", 300);
-                    }
+            startTraining(type) {
+                if (this.player.stamina <= 0) {
+                    this.showMessage("❌ Слишком устал для тренировки!");
+                    return;
                 }
-            };
-            
-            // Таймер QTE
-            gameState.qteInterval = setInterval(() => {
-                gameState.qteTimeLeft -= 1;
-                document.getElementById("qte-progress").style.width = `${gameState.qteTimeLeft}%`;
                 
-                if (gameState.qteTimeLeft <= 0) {
-                    endQTE(type);
+                this.state.training = true;
+                this.state.currentExercise = type;
+                
+                document.querySelectorAll("#game-container button").forEach(btn => {
+                    if (!btn.id.includes("qte")) btn.disabled = true;
+                });
+                
+                document.getElementById(type).style.display = "block";
+                
+                let message = "";
+                switch(type) {
+                    case "bench":
+                        message = "Жми кнопку, чтобы поднять штангу!";
+                        this.setupBenchPress();
+                        break;
+                    case "squat":
+                        message = "Приседай! Быстро нажимай!";
+                        this.setupSquat();
+                        break;
+                    case "treadmill":
+                        message = "Беги! Нажимай быстрее!";
+                        this.setupTreadmill();
+                        break;
                 }
-            }, 100);
-        }
-
-        // Завершение QTE
-        function endQTE(type) {
-            clearInterval(gameState.qteInterval);
-            gameState.qteActive = false;
-            document.getElementById("qte-container").style.display = "none";
+                
+                this.state.qteTarget = 10 + Math.floor(this.player.strength / 2);
+                document.getElementById("qte-message").textContent = message;
+                this.startQTE();
+            },
             
-            const successRate = Math.min(1, gameState.qteCount / gameState.qteTarget);
-            completeTraining(type, successRate);
-        }
+            setupBenchPress() {
+                document.getElementById("player").style.bottom = "35px";
+                document.getElementById("player-arm-left").style.transform = "rotate(70deg)";
+                document.getElementById("player-arm-right").style.transform = "rotate(-70deg)";
+            },
+            
+            setupSquat() {
+                const player = document.getElementById("player");
+                player.style.animation = "squat 1s infinite";
+                
+                // Анимация ног для приседаний
+                document.getElementById("player-leg-left").style.transform = "rotate(10deg)";
+                document.getElementById("player-leg-right").style.transform = "rotate(-10deg)";
+            },
+            
+            setupTreadmill() {
+                this.state.runSpeed = 0;
+                document.getElementById("treadmill-belt").style.animation = "runBelt 0.5s linear infinite";
+                document.getElementById("player-leg-left").style.animation = "runLegs 0.3s infinite";
+                document.getElementById("player-leg-right").style.animation = "runLegs 0.3s infinite 0.15s";
+                
+                // Положение для бега
+                document.getElementById("player-arm-left").style.transform = "rotate(20deg)";
+                document.getElementById("player-arm-right").style.transform = "rotate(-20deg)";
+            },
+            
+            handleQTEClick() {
+                if (!this.state.qteActive) return;
+                
+                this.state.qteCount++;
+                
+                if (this.state.currentExercise === "bench") {
+                    const bar = document.getElementById("bench-press-bar");
+                    bar.style.transform = "rotate(-20deg)";
+                    setTimeout(() => bar.style.transform = "rotate(0deg)", 200);
+                }
+                else if (this.state.currentExercise === "treadmill") {
+                    this.state.runSpeed = Math.min(10, this.state.runSpeed + 0.5);
+                    const speed = Math.floor(this.state.runSpeed * 3);
+                    document.getElementById("treadmill-display").textContent = `${speed} км/ч`;
+                }
+            },
+            
+            startQTE() {
+                this.state.qteActive = true;
+                this.state.qteCount = 0;
+                this.state.qteTimeLeft = 100;
+                document.getElementById("qte-container").style.display = "flex";
+                
+                this.state.qteInterval = setInterval(() => {
+                    this.state.qteTimeLeft--;
+                    document.getElementById("qte-progress").style.width = `${this.state.qteTimeLeft}%`;
+                    
+                    // Замедление беговой дорожки
+                    if (this.state.currentExercise === "treadmill") {
+                        this.state.runSpeed = Math.max(0, this.state.runSpeed - 0.05);
+                        const speed = Math.floor(this.state.runSpeed * 3);
+                        document.getElementById("treadmill-display").textContent = `${speed} км/ч`;
+                    }
+                    
+                    if (this.state.qteTimeLeft <= 0) {
+                        this.endTraining();
+                    }
+                }, 100);
+            },
+            
+            endTraining() {
+                clearInterval(this.state.qteInterval);
+                this.state.qteActive = false;
+                document.getElementById("qte-container").style.display = "none";
+                
+                const successRate = Math.min(1, this.state.qteCount / this.state.qteTarget);
+                let gain = 0;
+                
+                switch(this.state.currentExercise) {
+                    case "bench":
+                    case "squat":
+                        gain = Math.floor(2 * successRate);
+                        this.player.strength += gain;
+                        this.showMessage(`💪 +${gain} к силе!`);
+                        break;
+                    case "treadmill":
+                        gain = Math.floor(3 * successRate);
+                        this.player.stamina = Math.min(this.player.stamina + gain, this.player.maxStamina);
+                        this.showMessage(`🏃 +${gain} к выносливости!`);
+                        break;
+                }
+                
+                // Сброс анимаций
+                document.getElementById("player").style.animation = "none";
+                document.getElementById("player").style.bottom = "20px";
+                document.getElementById("player-arm-left").style.transform = "none";
+                document.getElementById("player-arm-right").style.transform = "none";
+                document.getElementById("player-leg-left").style.transform = "none";
+                document.getElementById("player-leg-right").style.transform = "none";
+                document.getElementById("player-leg-left").style.animation = "none";
+                document.getElementById("player-leg-right").style.animation = "none";
+                document.getElementById("bench-press-bar").style.transform = "none";
+                document.getElementById("treadmill-belt").style.animation = "none";
+                
+                this.player.stamina = Math.max(0, this.player.stamina - 1);
+                document.querySelectorAll(".equipment").forEach(el => el.style.display = "none");
+                
+                document.querySelectorAll("#game-container button").forEach(btn => {
+                    if (!btn.id.includes("qte")) btn.disabled = false;
+                });
+                
+                this.state.training = false;
+                this.updateStats();
+            },
+            
+            rest() {
+                const recovery = 3 + Math.floor(this.player.maxStamina / 5);
+                this.player.stamina = Math.min(this.player.stamina + recovery, this.player.maxStamina);
+                this.showMessage(`💤 Отдохнул! +${recovery} выносливости.`);
+                this.updateStats();
+            }
+        };
 
-        // Запуск игры
         window.onload = function() {
-            initGame();
+            game.init();
+            window.startTraining = (type) => game.startTraining(type);
+            window.rest = () => game.rest();
         };
     </script>
 </body>
