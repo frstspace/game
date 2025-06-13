@@ -62,7 +62,6 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            transition: all 0.3s ease;
         }
         #player-body {
             width: 100%;
@@ -93,7 +92,6 @@
             top: 30px;
             background-color: #4CAF50;
             transform-origin: top center;
-            transition: transform 0.3s ease;
         }
         #player-arm-left {
             left: 5px;
@@ -108,7 +106,6 @@
             bottom: 0;
             background-color: #4CAF50;
             transform-origin: top center;
-            transition: transform 0.3s ease;
         }
         #player-leg-left {
             left: 14px;
@@ -151,21 +148,6 @@
             left: 5px;
             background-color: #333;
             transform-origin: center center;
-            transition: transform 0.3s ease;
-        }
-        #bench-press-weights {
-            position: absolute;
-            width: 10px;
-            height: 20px;
-            background-color: #555;
-        }
-        #bench-press-weight-left {
-            left: 0;
-            top: -20px;
-        }
-        #bench-press-weight-right {
-            right: 0;
-            top: -20px;
         }
         #squat-rack {
             left: 50%;
@@ -187,14 +169,6 @@
             border-left: 5px solid #aaa;
             border-right: 5px solid #aaa;
         }
-        #squat-rack-bar {
-            position: absolute;
-            width: 60px;
-            height: 5px;
-            top: 40px;
-            left: 10px;
-            background-color: #333;
-        }
         #treadmill {
             left: 50%;
             transform: translateX(-50%);
@@ -213,21 +187,6 @@
             bottom: 30px;
             left: 10px;
             background-color: #333;
-            background-image: linear-gradient(90deg, #333 0%, #555 50%, #333 100%);
-            background-size: 60px 5px;
-        }
-        #treadmill-display {
-            position: absolute;
-            width: 30px;
-            height: 15px;
-            bottom: 40px;
-            left: 25px;
-            background-color: #000;
-            color: #0f0;
-            font-size: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
         #qte-container {
             position: relative;
@@ -245,7 +204,6 @@
             background-color: #f55;
             font-size: 24px;
             margin-bottom: 10px;
-            cursor: pointer;
         }
         #qte-timer {
             width: 80%;
@@ -258,7 +216,7 @@
             height: 100%;
             width: 100%;
             background-color: #4CAF50;
-            transition: width 0.1s linear;
+            transition: width 0.1s;
         }
         button {
             background-color: #4CAF50;
@@ -270,18 +228,23 @@
             cursor: pointer;
             font-size: 16px;
             width: 95%;
-            transition: transform 0.1s;
-        }
-        button:active {
-            transform: scale(0.98);
         }
         button:disabled {
             background-color: #555;
-            cursor: not-allowed;
         }
-        @keyframes runBelt {
-            0% { background-position: 0 0; }
-            100% { background-position: -60px 0; }
+        @keyframes benchPress {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-20deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes runLeg {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+        }
+        @keyframes squat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(15px); }
         }
     </style>
 </head>
@@ -296,7 +259,6 @@
         </div>
         
         <div id="gym-display">
-            <!-- Игрок -->
             <div id="player">
                 <div id="player-body">
                     <div id="player-head"></div>
@@ -308,14 +270,10 @@
                 </div>
             </div>
             
-            <!-- Тренажеры -->
             <div id="bench-press" class="equipment">
                 <div id="bench-press-base"></div>
                 <div id="bench-press-seat"></div>
-                <div id="bench-press-bar">
-                    <div id="bench-press-weight-left" class="bench-press-weights"></div>
-                    <div id="bench-press-weight-right" class="bench-press-weights"></div>
-                </div>
+                <div id="bench-press-bar"></div>
             </div>
             
             <div id="squat-rack" class="equipment">
@@ -327,17 +285,14 @@
             <div id="treadmill" class="equipment">
                 <div id="treadmill-base"></div>
                 <div id="treadmill-belt"></div>
-                <div id="treadmill-display">0 км/ч</div>
             </div>
         </div>
         
-        <!-- Кнопки тренировок -->
         <button id="bench-btn">🏋️ Жим лежа (+Сила)</button>
         <button id="squat-btn">🦵 Приседания (+Сила)</button>
         <button id="treadmill-btn">🏃 Бег (+Выносливость)</button>
         <button id="rest-btn">💤 Отдохнуть</button>
         
-        <!-- QTE мини-игра -->
         <div id="qte-container">
             <div id="qte-message"></div>
             <button id="qte-button">ЖМИ!</button>
@@ -362,8 +317,7 @@
                     qteTarget: 15,
                     qteTimeLeft: 100,
                     qteInterval: null,
-                    runSpeed: 0,
-                    beltAnimation: null
+                    legAnimation: null
                 },
                 
                 init() {
@@ -405,8 +359,8 @@
                     this.state.qteCount = 0;
                     
                     // Блокируем кнопки
-                    document.querySelectorAll('button:not(#qte-button)').forEach(btn => {
-                        btn.disabled = true;
+                    document.querySelectorAll('button').forEach(btn => {
+                        if (btn.id !== 'qte-button') btn.disabled = true;
                     });
                     
                     // Показываем тренажер
@@ -441,45 +395,26 @@
                 },
                 
                 setupBenchPress() {
-                    // Игрок ложится на скамью
                     document.getElementById('player').style.bottom = '35px';
                     document.getElementById('player-arm-left').style.transform = 'rotate(70deg)';
                     document.getElementById('player-arm-right').style.transform = 'rotate(-70deg)';
                 },
                 
                 setupSquat() {
-                    // Игрок готовится к приседаниям
                     document.getElementById('player-leg-left').style.transform = 'rotate(15deg)';
                     document.getElementById('player-leg-right').style.transform = 'rotate(-15deg)';
-                    document.getElementById('player-arm-left').style.transform = 'rotate(20deg)';
-                    document.getElementById('player-arm-right').style.transform = 'rotate(-20deg)';
                 },
                 
                 setupTreadmill() {
-                    // Игрок готовится к бегу
-                    document.getElementById('player-arm-left').style.transform = 'rotate(20deg)';
-                    document.getElementById('player-arm-right').style.transform = 'rotate(-20deg)';
-                    this.state.runSpeed = 0;
-                    this.animateTreadmill();
+                    this.animateLegs();
                 },
                 
-                animateTreadmill() {
-                    const belt = document.getElementById('treadmill-belt');
-                    let position = 0;
-                    const speed = () => this.state.runSpeed * 0.1;
+                animateLegs() {
+                    const leftLeg = document.getElementById('player-leg-left');
+                    const rightLeg = document.getElementById('player-leg-right');
                     
-                    const animate = () => {
-                        position = (position + speed()) % 60;
-                        belt.style.backgroundPosition = `-${position}px 0`;
-                        document.getElementById('treadmill-display').textContent = 
-                            `${Math.floor(this.state.runSpeed * 3)} км/ч`;
-                        
-                        if (this.state.qteActive) {
-                            this.state.beltAnimation = requestAnimationFrame(animate);
-                        }
-                    };
-                    
-                    this.state.beltAnimation = requestAnimationFrame(animate);
+                    leftLeg.style.animation = 'runLeg 0.5s infinite';
+                    rightLeg.style.animation = 'runLeg 0.5s infinite 0.25s';
                 },
                 
                 handleQTEClick() {
@@ -495,21 +430,21 @@
                             this.animateSquat();
                             break;
                         case 'treadmill':
-                            this.state.runSpeed = Math.min(10, this.state.runSpeed + 0.5);
+                            // Анимация уже работает
                             break;
                     }
                 },
                 
                 animateBenchPress() {
                     const bar = document.getElementById('bench-press-bar');
-                    bar.style.transform = 'rotate(-20deg)';
-                    setTimeout(() => bar.style.transform = 'rotate(0deg)', 200);
+                    bar.style.animation = 'benchPress 0.3s';
+                    setTimeout(() => bar.style.animation = 'none', 300);
                 },
                 
                 animateSquat() {
                     const player = document.getElementById('player');
-                    player.style.transform = 'translateY(10px)';
-                    setTimeout(() => player.style.transform = 'translateY(0)', 200);
+                    player.style.animation = 'squat 0.5s';
+                    setTimeout(() => player.style.animation = 'none', 500);
                 },
                 
                 startQTE() {
@@ -522,11 +457,6 @@
                         this.state.qteTimeLeft--;
                         document.getElementById('qte-progress').style.width = `${this.state.qteTimeLeft}%`;
                         
-                        // Замедление беговой дорожки
-                        if (this.state.currentExercise === 'treadmill') {
-                            this.state.runSpeed = Math.max(0, this.state.runSpeed - 0.05);
-                        }
-                        
                         if (this.state.qteTimeLeft <= 0) {
                             this.endTraining();
                         }
@@ -535,7 +465,6 @@
                 
                 endTraining() {
                     clearInterval(this.state.qteInterval);
-                    cancelAnimationFrame(this.state.beltAnimation);
                     this.state.qteActive = false;
                     document.getElementById('qte-container').style.display = 'none';
                     
@@ -580,15 +509,15 @@
                 resetPlayer() {
                     const player = document.getElementById('player');
                     player.style.bottom = '20px';
-                    player.style.transform = 'none';
+                    player.style.animation = 'none';
                     
                     document.getElementById('player-arm-left').style.transform = 'none';
                     document.getElementById('player-arm-right').style.transform = 'none';
                     document.getElementById('player-leg-left').style.transform = 'none';
                     document.getElementById('player-leg-right').style.transform = 'none';
-                    
-                    document.getElementById('treadmill-display').textContent = '0 км/ч';
-                    document.getElementById('treadmill-belt').style.backgroundPosition = '0 0';
+                    document.getElementById('player-leg-left').style.animation = 'none';
+                    document.getElementById('player-leg-right').style.animation = 'none';
+                    document.getElementById('bench-press-bar').style.animation = 'none';
                 },
                 
                 rest() {
