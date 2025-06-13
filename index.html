@@ -13,6 +13,7 @@
             color: white;
             text-align: center;
             touch-action: manipulation;
+            overflow-x: hidden;
         }
         #game-container {
             max-width: 500px;
@@ -47,11 +48,15 @@
             background-color: #3d3d3d;
             padding: 10px;
             border-radius: 5px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            margin: 5px;
         }
         #gym-display {
             position: relative;
             width: 100%;
-            height: 200px;
+            height: 250px;
             background-color: #1a1a1a;
             margin: 10px 0;
             border-radius: 5px;
@@ -64,35 +69,188 @@
             image-rendering: pixelated;
         }
         #player {
-            width: 50px;
-            height: 80px;
+            width: 60px;
+            height: 100px;
             bottom: 20px;
             left: 50px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 80"><rect x="15" y="10" width="20" height="30" fill="%234CAF50"/><circle cx="25" cy="15" r="10" fill="%234CAF50"/><rect x="10" y="40" width="10" height="30" fill="%234CAF50"/><rect x="30" y="40" width="10" height="30" fill="%234CAF50"/></svg>');
             z-index: 10;
+            transition: left 0.5s ease-in-out;
+        }
+        #player-body {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #player-head {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            top: 0;
+            left: 15px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+        }
+        #player-torso {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            top: 30px;
+            left: 15px;
+            background-color: #4CAF50;
+        }
+        #player-arm-left, #player-arm-right {
+            position: absolute;
+            width: 10px;
+            height: 40px;
+            top: 30px;
+            background-color: #4CAF50;
+            transform-origin: top center;
+        }
+        #player-arm-left {
+            left: 5px;
+        }
+        #player-arm-right {
+            right: 5px;
+        }
+        #player-leg-left, #player-leg-right {
+            position: absolute;
+            width: 12px;
+            height: 50px;
+            bottom: 0;
+            background-color: #4CAF50;
+        }
+        #player-leg-left {
+            left: 14px;
+        }
+        #player-leg-right {
+            right: 14px;
         }
         .equipment {
-            width: 60px;
-            height: 40px;
+            width: 80px;
+            height: 60px;
             bottom: 20px;
+            z-index: 5;
         }
         #bench-press {
-            left: 120px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="10" y="10" width="40" height="20" fill="%23aaa"/></svg>');
+            left: 150px;
+        }
+        #bench-press-base {
+            position: absolute;
+            width: 100%;
+            height: 15px;
+            bottom: 0;
+            background-color: #755;
+        }
+        #bench-press-seat {
+            position: absolute;
+            width: 60px;
+            height: 10px;
+            bottom: 15px;
+            left: 10px;
+            background-color: #aaa;
+        }
+        #bench-press-bar {
+            position: absolute;
+            width: 70px;
+            height: 5px;
+            top: 30px;
+            left: 5px;
+            background-color: #333;
+            transform-origin: center center;
+        }
+        #bench-press-weights {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #555;
+        }
+        #bench-press-weight-left {
+            left: 0;
+            top: -20px;
+        }
+        #bench-press-weight-right {
+            right: 0;
+            top: -20px;
         }
         #squat-rack {
-            left: 200px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="15" y="5" width="30" height="25" fill="%23aaa"/></svg>');
+            left: 250px;
+        }
+        #squat-rack-base {
+            position: absolute;
+            width: 100%;
+            height: 15px;
+            bottom: 0;
+            background-color: #755;
+        }
+        #squat-rack-frame {
+            position: absolute;
+            width: 50px;
+            height: 80px;
+            bottom: 15px;
+            left: 15px;
+            border-left: 5px solid #aaa;
+            border-right: 5px solid #aaa;
+        }
+        #squat-rack-bar {
+            position: absolute;
+            width: 60px;
+            height: 5px;
+            top: 40px;
+            left: 10px;
+            background-color: #333;
+        }
+        #squat-rack-weights {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #555;
+        }
+        #squat-rack-weight-left {
+            left: 5px;
+            top: 45px;
+        }
+        #squat-rack-weight-right {
+            right: 5px;
+            top: 45px;
         }
         #treadmill {
-            left: 280px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="5" y="15" width="50" height="5" fill="%23333"/></svg>');
+            left: 350px;
+        }
+        #treadmill-base {
+            position: absolute;
+            width: 100%;
+            height: 15px;
+            bottom: 0;
+            background-color: #755;
+        }
+        #treadmill-belt {
+            position: absolute;
+            width: 60px;
+            height: 5px;
+            bottom: 30px;
+            left: 10px;
+            background-color: #333;
+        }
+        #treadmill-display {
+            position: absolute;
+            width: 30px;
+            height: 15px;
+            bottom: 40px;
+            left: 25px;
+            background-color: #000;
+            color: #0f0;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .npc {
-            width: 40px;
-            height: 70px;
+            width: 50px;
+            height: 90px;
             bottom: 20px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 70"><rect x="10" y="10" width="20" height="25" fill="%23f55"/><circle cx="20" cy="10" r="8" fill="%23f55"/><rect x="5" y="35" width="10" height="25" fill="%23f55"/><rect x="25" y="35" width="10" height="25" fill="%23f55"/></svg>');
+            background-color: #f55;
+            border-radius: 5px;
+            display: none;
         }
         #qte-container {
             position: absolute;
@@ -171,6 +329,36 @@
             padding: 10px;
             border-radius: 5px;
         }
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        @keyframes benchPress {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(-5deg); }
+        }
+        @keyframes squat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(20px); }
+        }
+        @keyframes run {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-60px); }
+        }
+        @keyframes liftBar {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-30deg); }
+        }
     </style>
 </head>
 <body>
@@ -178,20 +366,59 @@
         <h1>Симулятор тренажерного зала</h1>
         
         <div id="stats">
-            <div>💪 <span id="strength">10</span></div>
-            <div>🏃 <span id="stamina">10</span>/<span id="max-stamina">10</span></div>
-            <div>⭐ <span id="reputation">1</span></div>
-            <div>💰 <span id="money">100</span></div>
+            <div class="stat">💪 <span id="strength">10</span></div>
+            <div class="stat">🏃 <span id="stamina">10</span>/<span id="max-stamina">10</span></div>
+            <div class="stat">⭐ <span id="reputation">1</span></div>
+            <div class="stat">💰 <span id="money">100</span></div>
+            <div class="stat">🎚️ <span id="level">1</span> ур.</div>
+            <div class="progress-container">
+                <div id="xp-bar" class="progress-bar"></div>
+            </div>
         </div>
         
         <div id="gym-display">
-            <div id="player" class="sprite"></div>
-            <div id="bench-press" class="sprite equipment"></div>
-            <div id="squat-rack" class="sprite equipment"></div>
-            <div id="treadmill" class="sprite equipment"></div>
-            <div id="npc1" class="sprite npc" style="left: 350px; display: none;"></div>
-            <div id="npc2" class="sprite npc" style="left: 400px; display: none;"></div>
+            <!-- Игрок -->
+            <div id="player" class="sprite">
+                <div id="player-body">
+                    <div id="player-head"></div>
+                    <div id="player-torso"></div>
+                    <div id="player-arm-left"></div>
+                    <div id="player-arm-right"></div>
+                    <div id="player-leg-left"></div>
+                    <div id="player-leg-right"></div>
+                </div>
+            </div>
             
+            <!-- Тренажеры -->
+            <div id="bench-press" class="sprite equipment">
+                <div id="bench-press-base"></div>
+                <div id="bench-press-seat"></div>
+                <div id="bench-press-bar">
+                    <div id="bench-press-weight-left" class="bench-press-weights"></div>
+                    <div id="bench-press-weight-right" class="bench-press-weights"></div>
+                </div>
+            </div>
+            
+            <div id="squat-rack" class="sprite equipment">
+                <div id="squat-rack-base"></div>
+                <div id="squat-rack-frame"></div>
+                <div id="squat-rack-bar">
+                    <div id="squat-rack-weight-left" class="squat-rack-weights"></div>
+                    <div id="squat-rack-weight-right" class="squat-rack-weights"></div>
+                </div>
+            </div>
+            
+            <div id="treadmill" class="sprite equipment">
+                <div id="treadmill-base"></div>
+                <div id="treadmill-belt"></div>
+                <div id="treadmill-display">0 км/ч</div>
+            </div>
+            
+            <!-- NPC -->
+            <div id="npc1" class="sprite npc" style="left: 400px;"></div>
+            <div id="npc2" class="sprite npc" style="left: 460px;"></div>
+            
+            <!-- QTE мини-игра -->
             <div id="qte-container">
                 <div id="qte-message">Быстро нажимай!</div>
                 <button id="qte-button">ЖМИ!</button>
