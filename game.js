@@ -34,15 +34,10 @@ function updateStats() {
 
 // Добавление сообщения в лог
 function addLog(message) {
-    const log = document.getElementById("log");
-    const entry = document.createElement("div");
-    entry.className = "log-entry";
-    entry.textContent = message;
-    log.prepend(entry);
-    
-    if (log.children.length > 5) {
-        log.removeChild(log.lastChild);
-    }
+    const log = document.getElementById("message-display");
+    log.textContent = message;
+    log.style.opacity = 1;
+    setTimeout(() => log.style.opacity = 0, 3000);
 }
 
 // Начало тренировки
@@ -62,7 +57,7 @@ function startTraining(type) {
     
     // Показываем нужный тренажер
     const equipment = document.getElementById(`${type.replace("-", "")}`);
-    equipment.style.display = "block";
+    if (equipment) equipment.style.display = "block";
     
     // Настраиваем QTE
     let qteTarget = 0;
@@ -99,12 +94,54 @@ function setupBenchPress() {
 
 // Настройка приседаний
 function setupSquat() {
-    // Пока пусто (можно добавить анимацию)
+    // Начальная позиция для приседаний
+    const leftLeg = document.getElementById("player-leg-left");
+    const rightLeg = document.getElementById("player-leg-right");
+    
+    if (leftLeg && rightLeg) {
+        leftLeg.style.transform = "rotate(15deg)";
+        rightLeg.style.transform = "rotate(-15deg)";
+    }
 }
 
 // Настройка беговой дорожки
 function setupTreadmill() {
-    // Пока пусто (можно добавить анимацию)
+    // Ноги в исходном положении
+    const leftLeg = document.getElementById("player-leg-left");
+    const rightLeg = document.getElementById("player-leg-right");
+    
+    if (leftLeg && rightLeg) {
+        leftLeg.style.transform = "none";
+        rightLeg.style.transform = "none";
+        leftLeg.style.animation = "none";
+        rightLeg.style.animation = "none";
+    }
+}
+
+// Анимация приседаний
+function animateSquat() {
+    const player = document.getElementById("player");
+    if (player) {
+        player.style.animation = "squat 0.5s";
+        setTimeout(() => player.style.animation = "none", 500);
+    }
+}
+
+// Анимация бега
+function animateRun() {
+    const leftLeg = document.getElementById("player-leg-left");
+    const rightLeg = document.getElementById("player-leg-right");
+    
+    if (leftLeg && rightLeg) {
+        // Быстрая анимация шага при каждом нажатии
+        leftLeg.style.transform = "rotate(15deg)";
+        rightLeg.style.transform = "rotate(-15deg)";
+        
+        setTimeout(() => {
+            leftLeg.style.transform = "rotate(-15deg)";
+            rightLeg.style.transform = "rotate(15deg)";
+        }, 100);
+    }
 }
 
 // Завершение тренировки
@@ -133,9 +170,7 @@ function completeTraining(type, successRate) {
     document.querySelectorAll(".equipment").forEach(el => el.style.display = "none");
     
     // Возвращаем игрока в исходное положение
-    document.getElementById("player").style.bottom = "20px";
-    document.getElementById("player-arm-left").style.transform = "none";
-    document.getElementById("player-arm-right").style.transform = "none";
+    resetPlayer();
     
     gameState.training = false;
     updateStats();
@@ -144,6 +179,31 @@ function completeTraining(type, successRate) {
     document.querySelectorAll("button").forEach(btn => {
         if (!btn.id.includes("qte")) btn.disabled = false;
     });
+}
+
+// Сброс позиции игрока
+function resetPlayer() {
+    const player = document.getElementById("player");
+    if (player) {
+        player.style.bottom = "20px";
+        player.style.animation = "none";
+    }
+    
+    const leftArm = document.getElementById("player-arm-left");
+    const rightArm = document.getElementById("player-arm-right");
+    const leftLeg = document.getElementById("player-leg-left");
+    const rightLeg = document.getElementById("player-leg-right");
+    
+    if (leftArm) leftArm.style.transform = "none";
+    if (rightArm) rightArm.style.transform = "none";
+    if (leftLeg) {
+        leftLeg.style.transform = "none";
+        leftLeg.style.animation = "none";
+    }
+    if (rightLeg) {
+        rightLeg.style.transform = "none";
+        rightLeg.style.animation = "none";
+    }
 }
 
 // Отдых
@@ -168,11 +228,19 @@ function startQTE(type, target, message) {
         if (gameState.qteActive) {
             gameState.qteCount++;
             
-            // Анимация поднятия штанги (для жима)
-            if (gameState.currentExercise === "bench") {
-                const bar = document.getElementById("bench-press-bar");
-                bar.style.animation = "benchPress 0.3s";
-                setTimeout(() => bar.style.animation = "none", 300);
+            // Анимации для разных упражнений
+            switch(gameState.currentExercise) {
+                case "bench":
+                    const bar = document.getElementById("bench-press-bar");
+                    bar.style.animation = "benchPress 0.3s";
+                    setTimeout(() => bar.style.animation = "none", 300);
+                    break;
+                case "squat":
+                    animateSquat();
+                    break;
+                case "treadmill":
+                    animateRun();
+                    break;
             }
         }
     };
@@ -201,4 +269,10 @@ function endQTE(type) {
 // Запуск игры
 window.onload = function() {
     initGame();
+    
+    // Привязка кнопок
+    document.getElementById("bench-btn").addEventListener("click", () => startTraining("bench"));
+    document.getElementById("squat-btn").addEventListener("click", () => startTraining("squat"));
+    document.getElementById("treadmill-btn").addEventListener("click", () => startTraining("treadmill"));
+    document.getElementById("rest-btn").addEventListener("click", rest);
 };
