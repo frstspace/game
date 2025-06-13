@@ -7,38 +7,168 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #1a1a1a;
             margin: 0;
             padding: 10px;
+            color: white;
             text-align: center;
+            touch-action: manipulation;
         }
         #game-container {
             max-width: 500px;
             margin: 0 auto;
-            background-color: #fff;
+            background-color: #2d2d2d;
             border-radius: 10px;
             padding: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
         button {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 12px;
             margin: 5px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            width: 95%;
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background-color: #555;
         }
         #stats {
             display: flex;
             justify-content: space-around;
             margin-bottom: 10px;
+            background-color: #3d3d3d;
+            padding: 10px;
+            border-radius: 5px;
         }
-        #gym-image {
+        #gym-display {
+            position: relative;
             width: 100%;
             height: 200px;
-            background-color: #ddd;
+            background-color: #1a1a1a;
             margin: 10px 0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .sprite {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+        }
+        #player {
+            width: 50px;
+            height: 80px;
+            bottom: 20px;
+            left: 50px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 80"><rect x="15" y="10" width="20" height="30" fill="%234CAF50"/><circle cx="25" cy="15" r="10" fill="%234CAF50"/><rect x="10" y="40" width="10" height="30" fill="%234CAF50"/><rect x="30" y="40" width="10" height="30" fill="%234CAF50"/></svg>');
+            z-index: 10;
+        }
+        .equipment {
+            width: 60px;
+            height: 40px;
+            bottom: 20px;
+        }
+        #bench-press {
+            left: 120px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="10" y="10" width="40" height="20" fill="%23aaa"/></svg>');
+        }
+        #squat-rack {
+            left: 200px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="15" y="5" width="30" height="25" fill="%23aaa"/></svg>');
+        }
+        #treadmill {
+            left: 280px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect x="0" y="30" width="60" height="10" fill="%23755"/><rect x="5" y="15" width="50" height="5" fill="%23333"/></svg>');
+        }
+        .npc {
+            width: 40px;
+            height: 70px;
+            bottom: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 70"><rect x="10" y="10" width="20" height="25" fill="%23f55"/><circle cx="20" cy="10" r="8" fill="%23f55"/><rect x="5" y="35" width="10" height="25" fill="%23f55"/><rect x="25" y="35" width="10" height="25" fill="%23f55"/></svg>');
+        }
+        #qte-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #qte-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #f55;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #qte-timer {
+            width: 80%;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #qte-progress {
+            height: 100%;
+            width: 100%;
+            background-color: #4CAF50;
+            transition: width 0.1s;
+        }
+        #log {
+            height: 100px;
+            overflow-y: auto;
+            background-color: #3d3d3d;
+            padding: 5px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px;
+            border-bottom: 1px solid #555;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background-color: #3d3d3d;
+            cursor: pointer;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #shop-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .shop-item {
+            background-color: #3d3d3d;
+            padding: 10px;
             border-radius: 5px;
         }
     </style>
@@ -48,19 +178,74 @@
         <h1>Симулятор тренажерного зала</h1>
         
         <div id="stats">
-            <div>💪 Сила: <span id="strength">10</span></div>
-            <div>🏃 Выносливость: <span id="stamina">10</span></div>
-            <div>💰 Деньги: <span id="money">100</span></div>
+            <div>💪 <span id="strength">10</span></div>
+            <div>🏃 <span id="stamina">10</span>/<span id="max-stamina">10</span></div>
+            <div>⭐ <span id="reputation">1</span></div>
+            <div>💰 <span id="money">100</span></div>
         </div>
         
-        <div id="gym-image"></div>
+        <div id="gym-display">
+            <div id="player" class="sprite"></div>
+            <div id="bench-press" class="sprite equipment"></div>
+            <div id="squat-rack" class="sprite equipment"></div>
+            <div id="treadmill" class="sprite equipment"></div>
+            <div id="npc1" class="sprite npc" style="left: 350px; display: none;"></div>
+            <div id="npc2" class="sprite npc" style="left: 400px; display: none;"></div>
+            
+            <div id="qte-container">
+                <div id="qte-message">Быстро нажимай!</div>
+                <button id="qte-button">ЖМИ!</button>
+                <div id="qte-timer"><div id="qte-progress"></div></div>
+            </div>
+        </div>
         
-        <div id="actions">
-            <button onclick="train('bench')">🏋️ Жим лежа (+Сила)</button>
-            <button onclick="train('squat')">🦵 Приседания (+Сила)</button>
-            <button onclick="train('treadmill')">🏃 Бег (+Выносливость)</button>
-            <button onclick="compete()">🏆 Турнир (Заработать деньги)</button>
-            <button onclick="upgradeGym()">🛠️ Улучшить зал</button>
+        <div class="tab-container">
+            <div class="tab active" onclick="switchTab('training')">Тренировки</div>
+            <div class="tab" onclick="switchTab('competitions')">Соревнования</div>
+            <div class="tab" onclick="switchTab('shop')">Магазин</div>
+        </div>
+        
+        <div id="training-tab" class="tab-content active">
+            <button onclick="startTraining('bench')">🏋️ Жим лежа (+Сила)</button>
+            <button onclick="startTraining('squat')">🦵 Приседания (+Сила)</button>
+            <button onclick="startTraining('treadmill')">🏃 Бег (+Выносливость)</button>
+            <button onclick="rest()">💤 Отдохнуть (восстановить выносливость)</button>
+        </div>
+        
+        <div id="competitions-tab" class="tab-content">
+            <button onclick="startCompetition('local')">🏆 Местный турнир</button>
+            <button id="regional-btn" onclick="startCompetition('regional')" disabled>🏆 Региональный турнир (треб. репутация 3)</button>
+            <button id="national-btn" onclick="startCompetition('national')" disabled>🏆 Национальный турнир (треб. репутация 5)</button>
+            <button onclick="challengeNPC()">🤼 Вызвать соперника на дуэль</button>
+        </div>
+        
+        <div id="shop-tab" class="tab-content">
+            <div id="shop-items">
+                <div class="shop-item">
+                    <h3>Новые гантели</h3>
+                    <p>+10% к силе</p>
+                    <p>💰 200</p>
+                    <button onclick="buyUpgrade('dumbbells')">Купить</button>
+                </div>
+                <div class="shop-item">
+                    <h3>Протеин</h3>
+                    <p>+1 к максимальной выносливости</p>
+                    <p>💰 150</p>
+                    <button onclick="buyUpgrade('protein')">Купить</button>
+                </div>
+                <div class="shop-item">
+                    <h3>Реклама</h3>
+                    <p>+1 к репутации</p>
+                    <p>💰 300</p>
+                    <button onclick="buyUpgrade('marketing')">Купить</button>
+                </div>
+                <div class="shop-item">
+                    <h3>Тренер</h3>
+                    <p>+20% к эффективности тренировок</p>
+                    <p>💰 500</p>
+                    <button onclick="buyUpgrade('trainer')">Купить</button>
+                </div>
+            </div>
         </div>
         
         <div id="log"></div>
